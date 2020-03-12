@@ -27,11 +27,25 @@ train_x, test_x, train_y, test_y = \
     x[:train_size], x[train_size:], \
     y[:train_size], y[train_size:]
 
-# 训练模型:随机森林
+# 训练模型:随机森林，随机生成1000颗森林树
 model = se.RandomForestRegressor(
-    max_depth=10, n_estimators=1000,
+    max_depth=10,
+	n_estimators=1000,
     min_samples_split=2)
 model.fit(train_x, train_y)
+
+
+# 模型参数调优 max_depth，不同深度训练模型，计算评分
+def cv_score(d):
+    model = se.RandomForestRegressor(max_depth=d)
+    model.fit(train_x,train_y)
+    pred_test_y = model.predict(test_x)
+    score=sm.r2_score(test_y, pred_test_y)
+    return score
+
+depths = range(2,15)
+scores = [cv_score(d) for d in depths]
+print(scores.index(max(scores)))
 
 # 评估模型
 pred_test_y = model.predict(test_x)
@@ -49,7 +63,6 @@ sorted_inds = fi.argsort()[::-1]
 mp.bar(x, fi[sorted_inds], 0.8, color='dodgerblue',
        label='day')
 mp.xticks(x, header[sorted_inds])
-
 mp.tight_layout()
 mp.legend()
 
@@ -77,11 +90,19 @@ model = se.RandomForestRegressor(
     min_samples_split=2)
 model.fit(train_x, train_y)
 
+
+#参数调优
+depths = range(2,15)
+scores = [cv_score(d) for d in depths]
+print(scores.index(max(scores)))
+
+
 # 评估模型
 pred_test_y = model.predict(test_x)
 print(sm.r2_score(test_y, pred_test_y))
-fi = model.feature_importances_
 
+
+fi = model.feature_importances_
 mp.subplot(212)
 mp.title('bike hour', fontsize=16)
 mp.ylabel('Importance', fontsize=12)
